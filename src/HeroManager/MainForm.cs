@@ -3,9 +3,10 @@ namespace HeroManager;
 internal sealed class MainForm : Form
 {
     private readonly ProcessMonitor _processMonitor = new();
-    private readonly System.Windows.Forms.Timer _refreshTimer = new() { Interval = 1000 };
+    private readonly System.Windows.Forms.Timer _refreshTimer = new() { Interval = 250 };
     private readonly DataGridView _processGrid = new();
-    private readonly MetricGraphControl _graph = new();
+    private readonly MetricGraphControl _cpuGraph = new("CPU usage", "%", Color.FromArgb(74, 163, 255), 100);
+    private readonly MetricGraphControl _memoryGraph = new("RAM usage", "MB", Color.FromArgb(116, 213, 129));
     private readonly Label _memorySummary = new();
     private readonly Label _selectedProcessSummary = new();
     private int? _selectedProcessId;
@@ -64,10 +65,23 @@ internal sealed class MainForm : Form
         _selectedProcessSummary.Height = 34;
         _selectedProcessSummary.Font = new Font(Font.FontFamily, 11, FontStyle.Bold);
         _selectedProcessSummary.ForeColor = Color.Gainsboro;
-        _graph.Dock = DockStyle.Fill;
+        _cpuGraph.Dock = DockStyle.Fill;
+        _memoryGraph.Dock = DockStyle.Fill;
+
+        var graphs = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2,
+            BackColor = BackColor
+        };
+        graphs.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        graphs.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        graphs.Controls.Add(_cpuGraph, 0, 0);
+        graphs.Controls.Add(_memoryGraph, 0, 1);
 
         var graphPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(0, 10, 0, 0), BackColor = BackColor };
-        graphPanel.Controls.Add(_graph);
+        graphPanel.Controls.Add(graphs);
         graphPanel.Controls.Add(_selectedProcessSummary);
 
         root.Controls.Add(header, 0, 0);
@@ -86,6 +100,16 @@ internal sealed class MainForm : Form
         _processGrid.BackgroundColor = Color.FromArgb(20, 24, 31);
         _processGrid.BorderStyle = BorderStyle.None;
         _processGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+        _processGrid.EnableHeadersVisualStyles = false;
+        _processGrid.GridColor = Color.FromArgb(55, 62, 74);
+        _processGrid.DefaultCellStyle.BackColor = Color.FromArgb(20, 24, 31);
+        _processGrid.DefaultCellStyle.ForeColor = Color.WhiteSmoke;
+        _processGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 120, 215);
+        _processGrid.DefaultCellStyle.SelectionForeColor = Color.White;
+        _processGrid.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(25, 29, 37);
+        _processGrid.AlternatingRowsDefaultCellStyle.ForeColor = Color.WhiteSmoke;
+        _processGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(34, 39, 49);
+        _processGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
         _processGrid.MultiSelect = false;
         _processGrid.ReadOnly = true;
         _processGrid.RowHeadersVisible = false;
@@ -120,7 +144,7 @@ internal sealed class MainForm : Form
         if (selectedProcessIdBeforeRefresh is not null && processes.All(process => process.Id != selectedProcessIdBeforeRefresh.Value))
         {
             _selectedProcessId = null;
-            _graph.ClearSamples();
+            ClearGraphs();
             _selectedProcessSummary.Text = "Selected process exited.";
         }
     }
@@ -148,7 +172,7 @@ internal sealed class MainForm : Form
         if (_selectedProcessId != process.Id)
         {
             _selectedProcessId = process.Id;
-            _graph.ClearSamples();
+            ClearGraphs();
         }
 
         UpdateSelectedProcess(process);
@@ -159,7 +183,14 @@ internal sealed class MainForm : Form
         _selectedProcessId = process.Id;
         var memoryMegabytes = process.WorkingSetBytes / 1024d / 1024d;
         _selectedProcessSummary.Text = $"Selected: {process.Name} (PID {process.Id})  •  CPU {process.CpuPercent:N1}%  •  RAM {FormatBytes(process.WorkingSetBytes)}";
-        _graph.AddSample(process.CpuPercent, memoryMegabytes);
+        _cpuGraph.AddSample(process.CpuPercent);
+        _memoryGraph.AddSample(memoryMegabytes);
+    }
+
+    private void ClearGraphs()
+    {
+        _cpuGraph.ClearSamples();
+        _memoryGraph.ClearSamples();
     }
 
     private static string FormatBytes(long bytes)

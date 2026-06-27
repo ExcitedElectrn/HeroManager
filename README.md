@@ -5,7 +5,7 @@ HeroManager is a .NET 8 C# Windows desktop application inspired by Windows Task 
 - A system-wide list of running processes.
 - Total, used, and free physical RAM.
 - Per-process CPU percentage and working-set RAM usage.
-- A real-time CPU/RAM graph for the selected process.
+- Separate real-time CPU and RAM graphs for the selected process, each showing the current value.
 
 ## Requirements
 
@@ -18,4 +18,4 @@ HeroManager is a .NET 8 C# Windows desktop application inspired by Windows Task 
 dotnet run --project src/HeroManager/HeroManager.csproj
 ```
 
-The app polls once per second. Some protected or short-lived processes may be skipped if Windows denies access or they exit while being read.
+The app polls four times per second for a more real-time view. Some protected or short-lived processes may be skipped if Windows denies access or they exit while being read.
