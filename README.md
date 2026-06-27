@@ -4,7 +4,7 @@ HeroManager is a .NET 8 C# Windows desktop application inspired by Windows Task 
 
 - A system-wide list of running processes.
 - Total, used, and free physical RAM.
-- Per-process CPU percentage and working-set RAM usage.
+- Per-process CPU percentage and private RAM usage, matching the style of Task Manager process memory values.
 - Separate real-time CPU and RAM graphs for the selected process, each showing the current value.
 
 ## Requirements

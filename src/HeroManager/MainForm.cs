@@ -132,7 +132,7 @@ internal sealed class MainForm : Form
 
         foreach (var process in processes)
         {
-            var rowIndex = _processGrid.Rows.Add(process.Id, process.Name, $"{process.CpuPercent:N1}%", FormatBytes(process.WorkingSetBytes));
+            var rowIndex = _processGrid.Rows.Add(process.Id, process.Name, $"{process.CpuPercent:N1}%", FormatBytes(process.MemoryBytes));
             _processGrid.Rows[rowIndex].Tag = process;
             if (selectedProcessIdBeforeRefresh == process.Id)
             {
@@ -181,8 +181,8 @@ internal sealed class MainForm : Form
     private void UpdateSelectedProcess(ProcessInfo process)
     {
         _selectedProcessId = process.Id;
-        var memoryMegabytes = process.WorkingSetBytes / 1024d / 1024d;
-        _selectedProcessSummary.Text = $"Selected: {process.Name} (PID {process.Id})  •  CPU {process.CpuPercent:N1}%  •  RAM {FormatBytes(process.WorkingSetBytes)}";
+        var memoryMegabytes = process.MemoryBytes / 1024d / 1024d;
+        _selectedProcessSummary.Text = $"Selected: {process.Name} (PID {process.Id})  •  CPU {process.CpuPercent:N1}%  •  RAM {FormatBytes(process.MemoryBytes)}";
         _cpuGraph.AddSample(process.CpuPercent);
         _memoryGraph.AddSample(memoryMegabytes);
     }

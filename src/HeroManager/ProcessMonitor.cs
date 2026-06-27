@@ -5,7 +5,6 @@ namespace HeroManager;
 internal sealed class ProcessMonitor
 {
     private readonly Dictionary<int, ProcessSample> _lastSamples = new();
-    private readonly int _processorCount = Math.Max(1, Environment.ProcessorCount);
 
     public IReadOnlyList<ProcessInfo> GetProcesses()
     {
@@ -21,14 +20,14 @@ internal sealed class ProcessMonitor
                 {
                     activeIds.Add(process.Id);
                     var totalProcessorTime = process.TotalProcessorTime;
-                    var workingSet = process.WorkingSet64;
+                    var privateMemory = process.PrivateMemorySize64;
                     var cpuPercent = CalculateCpuPercent(process.Id, totalProcessorTime, now);
 
                     processes.Add(new ProcessInfo(
                         process.Id,
                         string.IsNullOrWhiteSpace(process.ProcessName) ? "Unknown" : process.ProcessName,
                         cpuPercent,
-                        workingSet));
+                        privateMemory));
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException)
                 {
@@ -64,10 +63,10 @@ internal sealed class ProcessMonitor
             return 0;
         }
 
-        return Math.Clamp(processorDelta / (wallClockDelta * _processorCount) * 100d, 0, 100);
+        return Math.Clamp(processorDelta / wallClockDelta * 100d, 0, 100);
     }
 }
 
-internal sealed record ProcessInfo(int Id, string Name, double CpuPercent, long WorkingSetBytes);
+internal sealed record ProcessInfo(int Id, string Name, double CpuPercent, long MemoryBytes);
 
 internal sealed record ProcessSample(TimeSpan TotalProcessorTime, DateTime Timestamp);
